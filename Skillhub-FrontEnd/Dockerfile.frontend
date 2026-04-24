@@ -1,0 +1,30 @@
+# Stage 1: Build
+FROM node:20-slim AS builder
+
+WORKDIR /app
+
+# Copier les fichiers de dépendances
+COPY package*.json ./
+
+# Nettoyer et réinstaller
+RUN rm -rf node_modules package-lock.json
+RUN npm install
+
+# Copier le code source
+COPY . .
+
+# Forcer la reconstruction d'esbuild
+RUN npm install esbuild@latest
+
+# Build l'application
+RUN npm run build
+
+# Stage 2: Production avec nginx
+FROM nginx:alpine
+
+# Copier les fichiers build vers nginx
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

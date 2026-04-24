@@ -1,0 +1,384 @@
+openapi: 3.0.3
+info:
+  title: SkillHub API
+  description: API REST pour la plateforme de formations SkillHub
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8000/api
+    description: Serveur de développement local
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Formation:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: "Introduction à React"
+        description:
+          type: string
+          example: "Apprenez les fondamentaux de React"
+        category:
+          type: string
+          example: "Développement"
+        instructor:
+          type: string
+          example: "Sophie Martin"
+        duration:
+          type: string
+          example: "4 heures"
+        level:
+          type: string
+          enum: [Débutant, Intermédiaire, Avancé]
+          example: "Débutant"
+        date:
+          type: string
+          format: date
+          example: "2026-01-25"
+        prix:
+          type: number
+          format: float
+          example: 99.00
+        date_creation:
+          type: string
+          format: date-time
+          example: "2026-03-06T10:47:36"
+
+    FormationPayload:
+      type: object
+      required:
+        - nom
+        - prix
+        - duree
+        - niveau
+        - id_categorie
+        - description
+      properties:
+        nom:
+          type: string
+          maxLength: 150
+          example: "Introduction à React"
+        description:
+          type: string
+          example: "Apprenez les fondamentaux de React"
+        prix:
+          type: number
+          minimum: 0
+          example: 99.00
+        duree:
+          type: integer
+          minimum: 1
+          example: 4
+        niveau:
+          type: string
+          enum: [DEBUTANT, INTERMEDIAIRE, AVANCE]
+          example: "DEBUTANT"
+        date_debut:
+          type: string
+          format: date
+          example: "2026-06-01"
+        id_categorie:
+          type: integer
+          example: 1
+
+    LoginPayload:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: "sophie.martin@skillhub.fr"
+        password:
+          type: string
+          example: "Sophie2026!"
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+        user:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            nom:
+              type: string
+              example: "Martin"
+            prenom:
+              type: string
+              example: "Sophie"
+            email:
+              type: string
+              example: "sophie.martin@skillhub.fr"
+            role:
+              type: string
+              enum: [APPRENANT, FORMATEUR, ADMIN]
+              example: "FORMATEUR"
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Non authentifié"
+
+    ValidationErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "The nom field is required."
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example:
+            nom: ["Le titre est obligatoire"]
+            prix: ["Le prix est obligatoire"]
+
+paths:
+
+  /login:
+    post:
+      summary: Connexion utilisateur
+      description: Authentifie un utilisateur et retourne un token JWT
+      tags:
+        - Authentification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginPayload'
+      responses:
+        '200':
+          description: Connexion réussie
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Identifiants incorrects
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Email ou mot de passe incorrect"
+
+  /logout:
+    post:
+      summary: Déconnexion utilisateur
+      description: Invalide le token JWT de l'utilisateur connecté
+      tags:
+        - Authentification
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Déconnexion réussie
+          content:
+            application/json:
+              example:
+                message: "Déconnecté avec succès"
+        '401':
+          description: Token absent ou invalide
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /me:
+    get:
+      summary: Informations de l'utilisateur connecté
+      description: Retourne les informations de l'utilisateur authentifié
+      tags:
+        - Authentification
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  nom:
+                    type: string
+                  prenom:
+                    type: string
+                  email:
+                    type: string
+                  role:
+                    type: string
+        '401':
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /formations:
+    get:
+      summary: Liste toutes les formations disponibles
+      description: Retourne toutes les formations non archivées (accessible à tous les utilisateurs connectés)
+      tags:
+        - Formations
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Liste des formations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Formation'
+        '401':
+          description: Token absent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Créer une nouvelle formation
+      description: |
+        Crée une nouvelle formation. 
+        Réservé aux utilisateurs avec le rôle FORMATEUR ou ADMIN.
+        Le id_formateur est automatiquement récupéré via le token JWT,
+        il ne doit jamais être envoyé par le front-end.
+      tags:
+        - Formations
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FormationPayload'
+            example:
+              nom: "Introduction à React"
+              description: "Apprenez les fondamentaux de React"
+              prix: 99.00
+              duree: 4
+              niveau: "DEBUTANT"
+              date_debut: "2026-06-01"
+              id_categorie: 1
+      responses:
+        '201':
+          description: Formation créée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Formation'
+        '401':
+          description: Token absent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Non authentifié"
+        '403':
+          description: Token invalide ou rôle insuffisant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Accès refusé"
+        '422':
+          description: Erreur de validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+
+  /mes-formations:
+    get:
+      summary: Formations du formateur connecté
+      description: Retourne uniquement les formations créées par le formateur authentifié via son token JWT
+      tags:
+        - Formations
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Liste des formations du formateur
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Formation'
+        '401':
+          description: Token absent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /formations/{id}:
+    delete:
+      summary: Supprimer une formation
+      description: Supprime une formation. Réservé aux rôles FORMATEUR et ADMIN.
+      tags:
+        - Formations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '200':
+          description: Formation supprimée
+          content:
+            application/json:
+              example:
+                message: "Formation supprimée"
+        '401':
+          description: Token absent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Accès refusé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Formation introuvable
+          content:
+            application/json:
+              example:
+                message: "No query results for model"

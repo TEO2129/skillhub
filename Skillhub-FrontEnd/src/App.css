@@ -1,0 +1,597 @@
+/* Code css de toute l'application SkillHub */
+
+/*NAVBAR*/
+.navbar {
+  background-color: #5a4ed4;  
+  color: white;
+  padding: 1rem 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-container {
+  max-width: 80rem;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar-logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.navbar-user-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.btn-logout {
+  background-color: white;
+  color: #1f1f1f;  
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-weight: 600;  
+  transition: background-color 0.2s;
+}
+
+.btn-logout:hover {
+  background-color: #10b981;
+}
+
+/*CONTAINER PRINCIPAL*/
+.main-container {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+/*HEADER de la page*/
+.page-header {
+  margin-bottom: 2rem;
+}
+
+.page-title {
+  font-size: 1.875rem;
+  font-weight: bold;
+  color: #272311;
+  margin-bottom: 0.5rem;
+}
+
+.page-stats {
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+/*FILTRES*/
+.filters-container {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  max-width: 100%;
+}
+
+.filters-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #111827;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 1024px) {
+  .filters-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.filter-input,
+.filter-select {
+  width: 100%;
+  padding: 0.625rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+}
+
+
+/*WORKSHOP GRID*/
+.workshops-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+/*WORKSHOP CARD*/
+.workshop-card {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  cursor: pointer;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.workshop-category {
+  display: inline-block;
+  background-color: #b8b3f5;  
+  color: #2d1f99; 
+  font-size: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  margin-bottom: 0.75rem;
+  font-weight: 600; 
+  width: fit-content;
+}
+
+.workshop-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 0.75rem;
+  line-height: 1.4;
+}
+
+.workshop-info {
+  color: #4b5563;  
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.workshop-date {
+  color: #10b981;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  margin-top: auto;
+}
+
+.btn-details {
+  width: 100%;
+  background-color: #6c5ce7;
+  color: white;
+  padding: 0.625rem;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  font-size: 0.875rem;
+}
+
+.btn-details:hover {
+  background-color: #10b981;
+}
+
+/*PAGINATION*/
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
+}
+
+.page-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  background-color: white;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.875rem;
+}
+
+.page-btn:hover {
+  background-color: #10b981;
+}
+
+.page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/*MODAL*/
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 50;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-container {
+  background-color: white;
+  border-radius: 0.5rem;
+  max-width: 32rem;
+  width: 100%;
+  padding: 2rem;
+  position: relative;
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  color: #000000;
+  font-size: 2rem;
+  cursor: pointer;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  color: #111827;
+}
+
+.modal-content {
+  margin-bottom: 1.5rem;
+}
+
+.modal-description {
+  color: #374151;
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+
+.modal-info-box {
+  background-color: #f0f3f7;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.modal-info-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  color: #111827;
+}
+
+.modal-info-row:last-child {
+  margin-bottom: 0;
+}
+
+.modal-info-label {
+  font-weight: 600;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.btn-cancel {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 1px solid #dbd1d1;
+  background-color: white;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+}
+
+.btn-cancel:hover {
+  background-color: #f74545;
+}
+
+.btn-confirm {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: none;
+  background-color: #6c5ce7;
+  color: white;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+
+.btn-confirm:hover {
+  background-color: #10b981;
+}
+
+
+/* BOUTON CRÉER ATELIER */
+.btn-create-workshop {
+  background-color: #6c5ce7;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+}
+
+.btn-create-workshop:hover {
+  background-color: #10b981;
+}
+
+/* FORMULAIRE ATELIER */
+.modal-large {
+  max-width: 700px;
+}
+
+.workshop-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+@media (max-width: 768px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ACCESSIBILITÉ - Screen Reader Only */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* FOOTER */
+.footer {
+  background: linear-gradient(135deg, #2d3436 0%, #000000 100%);
+  color: white;
+  padding: 3rem 2rem 1rem;
+  margin-top: 4rem;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.footer-section h3 {
+  margin-bottom: 1.5rem;
+  font-size: 1.2rem;
+  color: white;
+}
+
+.footer-section ul {
+  list-style: none;
+  padding: 0;
+}
+
+.footer-section li {
+  margin-bottom: 0.8rem;
+}
+
+.footer-section a {
+  color: #d1d5db;  
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer-section a:hover {
+  color: white;
+}
+
+/* Réseaux sociaux */
+.footer-social {
+  max-width: 1200px;
+  margin: 0 auto 3rem;
+  text-align: center;
+}
+
+.footer-social h3 {
+  margin-bottom: 1.5rem;
+  font-size: 1.2rem;
+  color: white;
+}
+
+.social-links {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.social-links a {
+  width: 50px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  text-decoration: none;
+}
+
+.social-links a:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: white;
+  transform: translateY(-3px);
+}
+
+.footer-bottom {
+  text-align: center;
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid #636e72;
+  color: #d1d5db;  
+  font-size: 0.9rem;
+}
+
+/* ACTIONS WORKSHOP CARD */
+.workshop-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+.workshop-actions .btn-details {
+  flex: 1;
+}
+
+.btn-delete {
+  flex: 1;
+  background-color: #ef4444;
+  color: white;
+  padding: 0.625rem;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  font-size: 0.875rem;
+}
+
+.btn-delete:hover {
+  background-color: #dc2626;
+}
+
+.btn-delete-confirm {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: none;
+  background-color: #ef4444;
+  color: white;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+
+.btn-delete-confirm:hover {
+  background-color: #dc2626;
+}
+
+/* Responsive Footer */
+@media (max-width: 768px) {
+  .footer-content {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  
+  .footer {
+    padding: 2rem 1rem 1rem;
+  }
+}
+
+/*RESPONSIVE*/
+@media (max-width: 768px) {
+  .navbar-container {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .navbar-user-section {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .filters-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .workshops-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .modal-container {
+    padding: 1.5rem;
+  }
+  
+  .modal-title {
+    font-size: 1.25rem;
+  }
+  
+  .modal-info-row {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  
+  .pagination {
+    flex-wrap: wrap;
+  }
+  
+  .page-btn {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-container {
+    padding: 1rem;
+  }
+  
+  .page-title {
+    font-size: 1.5rem;
+  }
+  
+  .workshop-card {
+    padding: 1rem;
+  }
+}
