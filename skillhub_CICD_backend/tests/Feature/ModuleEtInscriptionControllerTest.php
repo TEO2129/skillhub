@@ -559,4 +559,68 @@ class ModuleEtInscriptionControllerTest extends TestCase
 
         $response->assertStatus(401);
     }
-}
+
+
+//limite de 5 inscriptions en meme temps
+
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function inscription_store_echoue_si_limite_5_formations_atteinte(): void
+    {
+        ['user' => $formateur]                    = $this->creerUser('formateur');
+        ['user' => $apprenant, 'token' => $token] = $this->creerUser('apprenant');
+
+        // L'apprentit est inscrit à 5 formations
+        for ($i = 1; $i <= 5; $i++) {
+            $formation = $this->creerFormation($formateur, ['titre' => 'Formation ' . $i]);
+            $this->inscrire($apprenant, $formation);
+        }
+
+        // Tente une 6ème inscription
+        $formation6 = $this->creerFormation($formateur, ['titre' => 'Formation 6']);
+
+        $response = $this->postJson(
+            '/api/formations/' . $formation6->id . '/inscription',
+            [],
+            $this->authHeaders($token)
+        );
+
+        $response->assertStatus(400)
+            ->assertJsonFragment([
+                'message' => 'Vous ne pouvez pas vous inscrire à plus de 5 formations simultanément',
+            ]);
+
+        // Vérifie que la 6ème inscription n'a pas été créée
+        $this->assertDatabaseMissing('inscriptions', [
+            'utilisateur_id' => $apprenant->id,
+            'formation_id'   => $formation6->id,
+        ]);
+    }
+
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function inscription_store_reussit_si_exactement_4_inscriptions_existantes(): void
+    {
+        ['user' => $formateur]                    = $this->creerUser('formateur');
+        ['user' => $apprenant, 'token' => $token] = $this->creerUser('apprenant');
+
+        // Inscrit l'apprenant à 4 formations
+        for ($i = 1; $i <= 4; $i++) {
+            $formation = $this->creerFormation($formateur, ['titre' => 'Formation ' . $i]);
+            $this->inscrire($apprenant, $formation);
+        }
+
+        // La 5ème doit réussir
+        $formation5 = $this->creerFormation($formateur, ['titre' => 'Formation 5']);
+
+        $response = $this->postJson(
+            '/api/formations/' . $formation5->id . '/inscription',
+            [],
+            $this->authHeaders($token)
+        );
+
+        $response->assertStatus(201);
+
+        $this->assertDatabaseHas('inscriptions', [
+            'utilisateur_id' => $apprenant->id,
+            'formation_id'   => $formation5->id,
+        ]);
+    }    }
