@@ -16,6 +16,7 @@ class InscriptionController extends Controller
 {
     private const MSG_TOKEN_INVALIDE  = 'Token invalide ou absent';
     private const MSG_USER_NON_TROUVE = 'Utilisateur non trouvé';
+    private const LIMITE_INSCRIPTIONS = 5;
 
     /**
      * Inscrire un apprenant a une formation.
@@ -35,37 +36,45 @@ class InscriptionController extends Controller
                     'message' => "Seul un apprenant peut s'inscrire à une formation",
                 ], 403);
             } else {
-                $formation = Formation::find($formationId);
+                $nombreInscriptions = Inscription::where('utilisateur_id', $user->id)->count();
 
-                if (! $formation) {
-                    $reponse = response()->json(['message' => 'Formation introuvable'], 404);
+                if ($nombreInscriptions >= self::LIMITE_INSCRIPTIONS) {
+                    $reponse = response()->json([
+                        'message' => 'Vous ne pouvez pas vous inscrire à plus de 5 formations simultanément',
+                    ], 400);
                 } else {
-                    $dejaInscrit = Inscription::where('utilisateur_id', $user->id)
-                        ->where('formation_id', $formation->id)
-                        ->first();
+                    $formation = Formation::find($formationId);
 
-                    if ($dejaInscrit) {
-                        $reponse = response()->json([
-                            'message' => 'Vous êtes déjà inscrit à cette formation',
-                        ], 409);
+                    if (! $formation) {
+                        $reponse = response()->json(['message' => 'Formation introuvable'], 404);
                     } else {
-                        $inscription = Inscription::create([
-                            'utilisateur_id' => $user->id,
-                            'formation_id'   => $formation->id,
-                            'progression'    => 0,
-                        ]);
+                        $dejaInscrit = Inscription::where('utilisateur_id', $user->id)
+                            ->where('formation_id', $formation->id)
+                            ->first();
 
-                        ActivityLogService::inscriptionFormation($formation->id, $user->id);
+                        if ($dejaInscrit) {
+                            $reponse = response()->json([
+                                'message' => 'Vous êtes déjà inscrit à cette formation',
+                            ], 409);
+                        } else {
+                            $inscription = Inscription::create([
+                                'utilisateur_id' => $user->id,
+                                'formation_id'   => $formation->id,
+                                'progression'    => 0,
+                            ]);
 
-                        $reponse = response()->json([
-                            'message'     => 'Inscription réussie',
-                            'inscription' => $inscription,
-                        ], 201);
+                            ActivityLogService::inscriptionFormation($formation->id, $user->id);
+
+                            $reponse = response()->json([
+                                'message'     => 'Inscription réussie',
+                                'inscription' => $inscription,
+                            ], 201);
+                        }
                     }
                 }
             }
         } catch (JWTException $e) {
-            // reponse 401 deja definie
+            // reponse 401 
         }
 
         return $reponse;
@@ -99,7 +108,7 @@ class InscriptionController extends Controller
                 }
             }
         } catch (JWTException $e) {
-            // reponse 401 deja definie
+            // reponse 401 
         }
 
         return $reponse;

@@ -1,0 +1,201 @@
+name: SkillHub CI/CD Pipeline
+
+on:
+  push:
+    branches: [ dev, main ]
+  pull_request:
+    branches: [ dev, main ]
+
+jobs:
+
+  # ═══════════════════════════════════════════════════════════════
+  # JOB 1 — Tests + Lint + SonarCloud Laravel
+  # ═══════════════════════════════════════════════════════════════
+  laravel-ci:
+    name: Laravel — Test, Lint, Sonar
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: skillhub_test
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_ROOT_HOST: '%'
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      mongodb:
+        image: mongo:latest
+        ports:
+          - 27017:27017
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo, pdo_mysql, mbstring, exif, bcmath, gd, mongodb
+          coverage: xdebug
+
+      # ── Install ──────────────────────────────────────────────
+      - name: Install Composer dependencies
+        working-directory: skillhub_CICD_backend
+        run: composer update --no-interaction --prefer-dist --optimize-autoloader --ignore-platform-reqs
+
+      # ── Lint ─────────────────────────────────────────────────
+      - name: Lint — PHP CS Fixer
+        working-directory: skillhub_CICD_backend
+        run: |
+          vendor/bin/pint --test || true
+
+      # ── Config .env ──────────────────────────────────────────
+      - name: Setup .env
+        working-directory: skillhub_CICD_backend
+        run: |
+          cp .env.example .env
+          sed -i 's/DB_HOST=127.0.0.1/DB_HOST=127.0.0.1/' .env
+          sed -i 's/DB_DATABASE=skillhub2/DB_DATABASE=skillhub_test/' .env
+          sed -i 's/DB_PASSWORD=/DB_PASSWORD=root/' .env
+          echo "SSO_SERVICE_URL=http://localhost:8080" >> .env
+          php artisan key:generate
+          php artisan jwt:secret --force
+
+      - name: Run migrations
+        working-directory: skillhub_CICD_backend
+        run: php artisan migrate --force
+
+      # ── Tests ────────────────────────────────────────────────
+      - name: Run tests with coverage
+        working-directory: skillhub_CICD_backend
+        run: |
+          php artisan test --coverage-clover build/logs/clover.xml \
+                           --log-junit build/logs/junit.xml
+
+      # ── SonarCloud Laravel ───────────────────────────────────
+      - name: SonarCloud Scan — Laravel
+        uses: SonarSource/sonarcloud-github-action@master
+        with:
+          projectBaseDir: skillhub_CICD_backend
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  # ═══════════════════════════════════════════════════════════════
+  # JOB 2 — Build + Test Spring Boot + SonarCloud
+  # ═══════════════════════════════════════════════════════════════
+  springboot-ci:
+    name: Spring Boot — Build, Test, Sonar
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # ── Install + Test ───────────────────────────────────────
+      - name: Build and test Spring Boot
+        working-directory: tp1-auth/server
+        run: |
+          mvn clean verify \
+            -Dmaven.compiler.source=17 \
+            -Dmaven.compiler.target=17 \
+            -Dmaven.compiler.release=17 \
+            -B
+
+      # ── SonarCloud Spring Boot ───────────────────────────────
+      - name: SonarCloud Scan — Spring Boot
+        working-directory: tp1-auth/server
+        run: |
+          mvn sonar:sonar \
+            -Dsonar.projectKey=TEO2129_skillhub-springboot \
+            -Dsonar.organization=teo2129 \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.token=${{ secrets.SONAR_TOKEN }} \
+            -Dmaven.compiler.release=17 \
+            -B
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  # ═══════════════════════════════════════════════════════════════
+  # JOB 3 — Build Docker images (après tests OK)
+  # ═══════════════════════════════════════════════════════════════
+  build-docker:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: [ laravel-ci, springboot-ci ]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Laravel image
+        run: |
+          docker build -t skillhub-backend:${{ github.sha }} \
+            -f skillhub_CICD_backend/Dockerfile \
+            ./skillhub_CICD_backend
+
+      - name: Build Spring Boot image
+        run: |
+          docker build -t skillhub-springboot:${{ github.sha }} \
+            --build-arg JAVA_VERSION=17 \
+            -f tp1-auth/server/Dockerfile \
+            ./tp1-auth/server
+
+  # ═══════════════════════════════════════════════════════════════
+  # JOB 4 — Push images vers registry (main seulement)
+  # ═══════════════════════════════════════════════════════════════
+  push-registry:
+    name: Push Docker Images
+    runs-on: ubuntu-latest
+    needs: [ build-docker ]
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.REGISTRY_USER }}
+          password: ${{ secrets.REGISTRY_TOKEN }}
+
+      - name: Build and push Laravel image
+        run: |
+          docker build -t ${{ secrets.REGISTRY_USER }}/skillhub-backend:${{ github.sha }} \
+            -t ${{ secrets.REGISTRY_USER }}/skillhub-backend:latest \
+            -f skillhub_CICD_backend/Dockerfile \
+            ./skillhub_CICD_backend
+          docker push ${{ secrets.REGISTRY_USER }}/skillhub-backend:${{ github.sha }}
+          docker push ${{ secrets.REGISTRY_USER }}/skillhub-backend:latest
+
+      - name: Build and push Spring Boot image
+        run: |
+          docker build -t ${{ secrets.REGISTRY_USER }}/skillhub-springboot:${{ github.sha }} \
+            -t ${{ secrets.REGISTRY_USER }}/skillhub-springboot:latest \
+            --build-arg JAVA_VERSION=17 \
+            -f tp1-auth/server/Dockerfile \
+            ./tp1-auth/server
+          docker push ${{ secrets.REGISTRY_USER }}/skillhub-springboot:${{ github.sha }}
+          docker push ${{ secrets.REGISTRY_USER }}/skillhub-springboot:latest

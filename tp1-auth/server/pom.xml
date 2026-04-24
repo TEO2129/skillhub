@@ -15,10 +15,11 @@
     <artifactId>auth-server</artifactId>
     <version>1.0.0</version>
     <name>auth-server</name>
-    <description>TP1 - Authentification</description>
+    <description>SkillHub - Microservice Authentification SSO</description>
 
     <properties>
-        <java.version>23</java.version>
+        <!-- Java 17 pour compatibilité avec l'environnement local -->
+        <java.version>17</java.version>
     </properties>
 
     <dependencies>
@@ -34,7 +35,7 @@
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
-        <!-- H2 Database -->
+        <!-- H2 Database (en memoire pour dev) -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
@@ -45,6 +46,25 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
+        <!-- JJWT - Generation et validation de vrais tokens JWT -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>0.11.5</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>0.11.5</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>0.11.5</version>
+            <scope>runtime</scope>
         </dependency>
 
         <!-- Tests -->

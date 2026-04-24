@@ -47,6 +47,20 @@ Route::get('/messages/conversation/{interlocuteurId}',[MessageController::class,
 Route::post('/messages/envoyer',                      [MessageController::class, 'envoyer']);
 Route::get('/messages/interlocuteurs',                [MessageController::class, 'interlocuteurs']);
 
+// ─── Route protégée par SSO Spring Boot ───────────────────────────────────
+// Route valide le token JWT via le microservice Spring Boot
+// avant d'autoriser l'accès
+Route::middleware('sso.auth')->group(function () {
+    Route::get('/sso/profil', function (\Illuminate\Http\Request $request) {
+        $ssoUser = $request->get('sso_user');
+        return response()->json([
+            'message'  => 'Accès autorisé via SSO Spring Boot',
+            'sso_user' => $ssoUser,
+        ]);
+    });
+});
+
+
 // ─── Preflight CORS ───────────────────────────────────────────
 Route::options('/{any}', function () {
     return response('', 200);
