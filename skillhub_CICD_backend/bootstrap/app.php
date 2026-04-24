@@ -4,6 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\CorsMiddleware;
+use App\Http\Middleware\SSOAuthMiddleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -15,6 +16,12 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Middleware CORS appliqué en premier sur toutes les requêtes
         $middleware->prepend(CorsMiddleware::class);
+
+        // Enregistrement du middleware SSO comme alias
+        // Utilisation : Route::middleware('sso.auth')
+        $middleware->alias([
+            'sso.auth' => SSOAuthMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
