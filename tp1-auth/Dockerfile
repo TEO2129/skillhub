@@ -12,7 +12,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests -B
 
 # ─────────────────────────────────────────────
-# runtime leger
+# Stage 2 : runtime leger
 # ─────────────────────────────────────────────
 FROM eclipse-temurin:17-jre-alpine AS runtime
 
